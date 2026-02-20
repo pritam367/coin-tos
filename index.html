@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ultimate Head & Tail Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .app {
+            background: white;
+            width: 350px;
+            padding: 20px;
+            border-radius: 25px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .coin {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            transition: transform 0.6s;
+        }
+
+        .head { background: blue; }
+        .tail { background: pink; }
+
+        .spin { transform: rotateY(720deg); }
+
+        button {
+            padding: 8px 12px;
+            margin: 4px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .flip-btn { background: #667eea; color: white; }
+        .mode-btn { background: #764ba2; color: white; }
+        .bet-btn { background: green; color: white; }
+        .reset-btn { background: crimson; color: white; }
+
+        .info {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        input {
+            padding: 5px;
+            width: 60px;
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <h2>Ultimate Head & Tail</h2>
+
+    <div id="coin" class="coin head">HEAD</div>
+
+    <button class="flip-btn" onclick="flipCoin()">Flip</button>
+    <button class="mode-btn" onclick="toggleMode()">Switch Mode</button>
+    <button class="reset-btn" onclick="resetGame()">Reset</button>
+
+    <div class="info">
+        Mode: <span id="modeDisplay">Pattern</span><br>
+        AI Predict: <span id="aiPredict">H</span><br>
+        Heads: <span id="headCount">0</span> |
+        Tails: <span id="tailCount">0</span><br><br>
+
+        💰 Money: $<span id="money">100</span><br><br>
+
+        Bet: <input type="number" id="betAmount" value="10"><br>
+        <button class="bet-btn" onclick="setBet('HEAD')">Bet Head</button>
+        <button class="bet-btn" onclick="setBet('TAIL')">Bet Tail</button>
+    </div>
+</div>
+
+<script>
+    // Custom Pattern
+    let pattern = ["H","H","T","H","T","T","H","H","T","H","T","T","H","T"];
+    let index = 0;
+    let mode = "pattern";
+
+    let headCount = 0;
+    let tailCount = 0;
+    let money = 100;
+    let currentBet = null;
+
+    function flipCoin() {
+        let coin = document.getElementById("coin");
+        coin.classList.add("spin");
+
+        setTimeout(() => {
+
+            let result;
+
+            if(mode === "pattern"){
+                if(index >= pattern.length) index = 0;
+                result = pattern[index];
+                index++;
+            } else {
+                result = Math.random() < 0.5 ? "H" : "T";
+            }
+
+            if(result === "H"){
+                coin.className = "coin head";
+                coin.innerText = "HEAD";
+                headCount++;
+                playSound(600);
+            } else {
+                coin.className = "coin tail";
+                coin.innerText = "TAIL";
+                tailCount++;
+                playSound(300);
+            }
+
+            updateScore(result);
+            updateAI();
+            coin.classList.remove("spin");
+
+        }, 600);
+    }
+
+    function toggleMode(){
+        mode = mode === "pattern" ? "random" : "pattern";
+        document.getElementById("modeDisplay").innerText =
+            mode === "pattern" ? "Pattern" : "Random";
+    }
+
+    function resetGame(){
+        index = 0;
+        headCount = 0;
+        tailCount = 0;
+        money = 100;
+        currentBet = null;
+        updateDisplay();
+    }
+
+    function updateDisplay(){
+        document.getElementById("headCount").innerText = headCount;
+        document.getElementById("tailCount").innerText = tailCount;
+        document.getElementById("money").innerText = money;
+    }
+
+    function updateScore(result){
+        let betAmount = parseInt(document.getElementById("betAmount").value);
+
+        if(currentBet){
+            if(currentBet === result){
+                money += betAmount;
+            } else {
+                money -= betAmount;
+            }
+        }
+
+        updateDisplay();
+    }
+
+    function setBet(choice){
+        currentBet = choice === "HEAD" ? "H" : "T";
+    }
+
+    function updateAI(){
+        if(mode === "pattern"){
+            let next = pattern[index % pattern.length];
+            document.getElementById("aiPredict").innerText = next;
+        } else {
+            document.getElementById("aiPredict").innerText = "?";
+        }
+    }
+
+    function playSound(freq){
+        let ctx = new (window.AudioContext || window.webkitAudioContext)();
+        let oscillator = ctx.createOscillator();
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(freq, ctx.currentTime);
+        oscillator.connect(ctx.destination);
+        oscillator.start();
+        oscillator.stop(ctx.currentTime + 0.1);
+    }
+
+    updateDisplay();
+    updateAI();
+
+</script>
+
+</body>
+</html>
